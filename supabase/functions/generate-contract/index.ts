@@ -28,20 +28,42 @@ serve(async (req) => {
 - Optimizing for gas efficiency on EVM chains
 
 When generating contracts:
-1. Always include proper SPDX license and pragma statements
-2. Add clear comments explaining functionality
-3. Implement security best practices (reentrancy guards, access control, etc.)
-4. Use events for important state changes
-5. Consider gas optimization
-6. Make contracts production-ready
+1. Always include proper SPDX license identifier and pragma statements
+2. Add clear, descriptive comments explaining functionality
+3. Implement security best practices:
+   - Reentrancy guards using OpenZeppelin's ReentrancyGuard
+   - Access control with Ownable or AccessControl
+   - Input validation and require statements
+   - SafeMath for older Solidity versions (though ^0.8.0 has built-in overflow protection)
+4. Use events for important state changes (critical for Somnia's high-throughput indexing)
+5. Optimize for gas efficiency:
+   - Use appropriate data types (uint256 vs uint8)
+   - Pack storage variables efficiently
+   - Minimize storage operations
+   - Use memory instead of storage where possible
+   - Leverage immutable and constant keywords
+6. Make contracts production-ready and immediately deployable
 
-For Somnia blockchain (EVM-compatible L1):
-- Use Solidity ^0.8.0 or higher
-- Leverage Somnia's high throughput capabilities
-- Optimize for low gas costs
-- Consider gaming/metaverse/DeFi use cases
+For Somnia blockchain (EVM-compatible L1 with unique features):
+- Use Solidity ^0.8.0 or higher (^0.8.20+ recommended)
+- Leverage Somnia's capabilities:
+  * High throughput: >1,000,000 TPS (transactions per second)
+  * Sub-second finality: ~400ms block time
+  * Ultra-low fees: optimize for transaction frequency
+  * Reactive capabilities: emit detailed events for high-frequency monitoring
+- Best practices for Somnia:
+  * Emit comprehensive events for all state changes (indexing is cheap and fast)
+  * Design for high-frequency interactions (gaming, metaverse, real-time DeFi)
+  * Use batch operations where possible to maximize throughput benefits
+  * Consider real-time oracle integrations
+- Common use cases: Gaming NFTs, metaverse assets, high-frequency DeFi, real-time voting/governance
 
-Generate complete, working contracts that can be deployed immediately.`;
+Import OpenZeppelin contracts using npm-style imports:
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+
+Generate complete, working, production-ready contracts that compile without errors and can be deployed immediately to Somnia.`;
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',

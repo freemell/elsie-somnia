@@ -1,31 +1,12 @@
-import { Wallet } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useState } from "react";
-import { toast } from "sonner";
 import elsieLogo from "@/assets/elsie-logo.png";
+import WalletConnect from "./WalletConnect";
+import { BrowserProvider } from "ethers";
 
-const Header = () => {
-  const [isConnected, setIsConnected] = useState(false);
-  const [address, setAddress] = useState("");
+interface HeaderProps {
+  onWalletConnected: (address: string, provider: BrowserProvider) => void;
+}
 
-  const connectWallet = async () => {
-    try {
-      const ethereum = (window as any).ethereum;
-      if (ethereum) {
-        const accounts = await ethereum.request({ 
-          method: 'eth_requestAccounts' 
-        });
-        setAddress(accounts[0]);
-        setIsConnected(true);
-        toast.success("Wallet connected successfully!");
-      } else {
-        toast.error("Please install MetaMask to connect your wallet");
-      }
-    } catch (error) {
-      console.error("Wallet connection error:", error);
-      toast.error("Failed to connect wallet");
-    }
-  };
+const Header = ({ onWalletConnected }: HeaderProps) => {
 
   return (
     <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
@@ -45,17 +26,7 @@ const Header = () => {
           </div>
         </div>
 
-        <Button 
-          onClick={connectWallet}
-          variant={isConnected ? "secondary" : "default"}
-          className="gap-2"
-        >
-          <Wallet className="h-4 w-4" />
-          {isConnected 
-            ? `${address.slice(0, 6)}...${address.slice(-4)}`
-            : "Connect Wallet"
-          }
-        </Button>
+        <WalletConnect onWalletConnected={onWalletConnected} />
       </div>
     </header>
   );
