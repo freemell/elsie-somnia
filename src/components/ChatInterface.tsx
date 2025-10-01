@@ -54,7 +54,18 @@ const ChatInterface = ({ onCodeGenerated, selectedTemplate }: ChatInterfaceProps
   };
 
   const extractSolidityCode = (text: string): string => {
-    // Extract Solidity code from markdown code blocks
+    // Handle incomplete code blocks during streaming (opening fence without closing)
+    const incompleteSolidityMatch = text.match(/```solidity\n([\s\S]*)$/);
+    if (incompleteSolidityMatch) {
+      return incompleteSolidityMatch[1];
+    }
+    
+    const incompleteCodeMatch = text.match(/```\n([\s\S]*)$/);
+    if (incompleteCodeMatch && incompleteCodeMatch[1].includes('pragma solidity')) {
+      return incompleteCodeMatch[1];
+    }
+    
+    // Extract complete Solidity code blocks
     const solidityMatch = text.match(/```solidity\n([\s\S]*?)\n```/);
     if (solidityMatch) {
       return solidityMatch[1];
@@ -71,7 +82,7 @@ const ChatInterface = ({ onCodeGenerated, selectedTemplate }: ChatInterfaceProps
       return text;
     }
     
-    return text;
+    return '';
   };
 
   const generateResponse = async (userMessage: string) => {
@@ -142,9 +153,9 @@ const ChatInterface = ({ onCodeGenerated, selectedTemplate }: ChatInterfaceProps
             if (content) {
               fullMessage += content;
               
-              // Extract and update code progressively
+              // Extract and update code progressively for letter-by-letter display
               const extractedCode = extractSolidityCode(fullMessage);
-              if (extractedCode !== currentCode) {
+              if (extractedCode && extractedCode !== currentCode) {
                 currentCode = extractedCode;
                 onCodeGenerated(currentCode);
               }
