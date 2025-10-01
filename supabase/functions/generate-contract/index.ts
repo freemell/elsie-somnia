@@ -57,6 +57,7 @@ Generate complete, working contracts that can be deployed immediately.`;
         ],
         temperature: 0.7,
         max_tokens: 2000,
+        stream: true,
       }),
     });
 
@@ -85,20 +86,17 @@ Generate complete, working contracts that can be deployed immediately.`;
       throw new Error(`AI Gateway error: ${response.status}`);
     }
 
-    const data = await response.json();
-    console.log('AI response received successfully');
+    console.log('Streaming AI response');
 
-    const assistantMessage = data.choices[0].message.content;
-
-    return new Response(
-      JSON.stringify({ 
-        message: assistantMessage,
-        model: 'google/gemini-2.5-flash'
-      }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    );
+    // Stream the response back to the client
+    return new Response(response.body, {
+      headers: { 
+        ...corsHeaders, 
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+      },
+    });
 
   } catch (error) {
     console.error('Error in generate-contract function:', error);

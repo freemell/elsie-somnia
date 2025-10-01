@@ -88,26 +88,83 @@ const ChatInterface = ({ onCodeGenerated, selectedTemplate }: ChatInterfaceProps
         content: userMessage
       });
 
-      const { data, error } = await supabase.functions.invoke('generate-contract', {
-        body: { messages: conversationMessages }
+      const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-contract`;
+      const response = await fetch(CHAT_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({ messages: conversationMessages }),
       });
 
-      if (error) {
-        console.error('Supabase function error:', error);
-        throw new Error(error.message || 'Failed to generate contract');
+      if (!response.ok || !response.body) {
+        if (response.status === 429) {
+          throw new Error("Rate limit exceeded. Please try again in a moment.");
+        }
+        if (response.status === 402) {
+          throw new Error("AI credits depleted. Please add credits to continue.");
+        }
+        throw new Error('Failed to start stream');
       }
 
-      if (!data || !data.message) {
-        throw new Error('Invalid response from AI');
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let textBuffer = '';
+      let streamDone = false;
+      let fullMessage = '';
+      let currentCode = '';
+
+      while (!streamDone) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        
+        textBuffer += decoder.decode(value, { stream: true });
+
+        let newlineIndex: number;
+        while ((newlineIndex = textBuffer.indexOf('\n')) !== -1) {
+          let line = textBuffer.slice(0, newlineIndex);
+          textBuffer = textBuffer.slice(newlineIndex + 1);
+
+          if (line.endsWith('\r')) line = line.slice(0, -1);
+          if (line.startsWith(':') || line.trim() === '') continue;
+          if (!line.startsWith('data: ')) continue;
+
+          const jsonStr = line.slice(6).trim();
+          if (jsonStr === '[DONE]') {
+            streamDone = true;
+            break;
+          }
+
+          try {
+            const parsed = JSON.parse(jsonStr);
+            const content = parsed.choices?.[0]?.delta?.content as string | undefined;
+            if (content) {
+              fullMessage += content;
+              
+              // Extract and update code progressively
+              const extractedCode = extractSolidityCode(fullMessage);
+              if (extractedCode !== currentCode) {
+                currentCode = extractedCode;
+                onCodeGenerated(currentCode);
+              }
+            }
+          } catch {
+            textBuffer = line + '\n' + textBuffer;
+            break;
+          }
+        }
       }
 
-      console.log('AI response received:', data);
+      // Final extraction
+      const finalCode = extractSolidityCode(fullMessage);
+      onCodeGenerated(finalCode);
 
-      // Extract and set the Solidity code
-      const generatedCode = extractSolidityCode(data.message);
-      onCodeGenerated(generatedCode);
-
-      return data.message;
+      // Return only non-code parts for chat display
+      const chatMessage = fullMessage.replace(/```solidity\n[\s\S]*?\n```/g, '[Smart contract generated]')
+        .replace(/```\n[\s\S]*?\n```/g, '[Smart contract generated]');
+      
+      return chatMessage || 'Smart contract generated successfully!';
 
     } catch (error) {
       console.error('Error generating response:', error);
