@@ -2,7 +2,6 @@ import { useState } from "react";
 import Header from "@/components/Header";
 import ChatInterface from "@/components/ChatInterface";
 import CodeEditorEnhanced from "@/components/CodeEditorEnhanced";
-import ContractTemplates from "@/components/ContractTemplates";
 import { BrowserProvider } from "ethers";
 
 const Index = () => {
@@ -20,7 +19,6 @@ contract Welcome {
     }
 }`);
 
-  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [walletProvider, setWalletProvider] = useState<BrowserProvider | null>(null);
 
   const handleWalletConnected = (address: string, provider: BrowserProvider) => {
@@ -36,13 +34,11 @@ contract Welcome {
         <div className="lg:w-1/2 flex flex-col gap-4">
           <ChatInterface 
             onCodeGenerated={setGeneratedCode}
-            selectedTemplate={selectedTemplate}
           />
         </div>
 
         {/* Code Editor - Right Side */}
         <div className="lg:w-1/2 flex flex-col gap-4">
-          <ContractTemplates onSelectTemplate={setSelectedTemplate} />
           <CodeEditorEnhanced 
             code={generatedCode} 
             onCodeChange={setGeneratedCode}

@@ -13,10 +13,9 @@ interface Message {
 
 interface ChatInterfaceProps {
   onCodeGenerated: (code: string) => void;
-  selectedTemplate: string | null;
 }
 
-const ChatInterface = ({ onCodeGenerated, selectedTemplate }: ChatInterfaceProps) => {
+const ChatInterface = ({ onCodeGenerated }: ChatInterfaceProps) => {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
@@ -32,26 +31,6 @@ const ChatInterface = ({ onCodeGenerated, selectedTemplate }: ChatInterfaceProps
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
-
-  useEffect(() => {
-    if (selectedTemplate) {
-      handleTemplateSelection(selectedTemplate);
-    }
-  }, [selectedTemplate]);
-
-  const handleTemplateSelection = (template: string) => {
-    const templatePrompts: Record<string, string> = {
-      erc20: "Create an ERC-20 token contract",
-      nft: "Create an NFT minting contract",
-      dao: "Create a DAO governance contract",
-      defi: "Create a DeFi staking contract"
-    };
-    
-    const prompt = templatePrompts[template];
-    if (prompt) {
-      setInput(prompt);
-    }
-  };
 
   const extractSolidityCode = (text: string): string => {
     // Handle incomplete code blocks during streaming (opening fence without closing)
