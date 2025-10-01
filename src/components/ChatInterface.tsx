@@ -4,6 +4,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Send, Sparkles } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Message {
   role: "user" | "assistant";
@@ -52,96 +53,66 @@ const ChatInterface = ({ onCodeGenerated, selectedTemplate }: ChatInterfaceProps
     }
   };
 
+  const extractSolidityCode = (text: string): string => {
+    // Extract Solidity code from markdown code blocks
+    const solidityMatch = text.match(/```solidity\n([\s\S]*?)\n```/);
+    if (solidityMatch) {
+      return solidityMatch[1];
+    }
+    
+    // Check for generic code blocks
+    const codeMatch = text.match(/```\n([\s\S]*?)\n```/);
+    if (codeMatch && codeMatch[1].includes('pragma solidity')) {
+      return codeMatch[1];
+    }
+    
+    // If no code blocks, check if the entire text is Solidity code
+    if (text.includes('pragma solidity')) {
+      return text;
+    }
+    
+    return text;
+  };
+
   const generateResponse = async (userMessage: string) => {
-    // Mock AI response with sample contract generation
-    const templates: Record<string, string> = {
-      "erc-20": `pragma solidity ^0.8.0;
+    try {
+      console.log('Calling AI with message:', userMessage);
+      
+      const conversationMessages = messages.map(msg => ({
+        role: msg.role,
+        content: msg.content
+      }));
+      
+      conversationMessages.push({
+        role: 'user',
+        content: userMessage
+      });
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+      const { data, error } = await supabase.functions.invoke('generate-contract', {
+        body: { messages: conversationMessages }
+      });
 
-contract MyToken is ERC20 {
-    constructor(uint256 initialSupply) ERC20("MyToken", "MTK") {
-        _mint(msg.sender, initialSupply * 10 ** decimals());
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw new Error(error.message || 'Failed to generate contract');
+      }
+
+      if (!data || !data.message) {
+        throw new Error('Invalid response from AI');
+      }
+
+      console.log('AI response received:', data);
+
+      // Extract and set the Solidity code
+      const generatedCode = extractSolidityCode(data.message);
+      onCodeGenerated(generatedCode);
+
+      return data.message;
+
+    } catch (error) {
+      console.error('Error generating response:', error);
+      throw error;
     }
-}`,
-      "nft": `pragma solidity ^0.8.0;
-
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-
-contract MyNFT is ERC721, Ownable {
-    uint256 private _tokenIdCounter;
-
-    constructor() ERC721("MyNFT", "MNFT") {}
-
-    function safeMint(address to) public onlyOwner {
-        uint256 tokenId = _tokenIdCounter;
-        _tokenIdCounter++;
-        _safeMint(to, tokenId);
-    }
-}`,
-      "dao": `pragma solidity ^0.8.0;
-
-contract SimpleDAO {
-    struct Proposal {
-        string description;
-        uint256 voteCount;
-        bool executed;
-    }
-
-    mapping(uint256 => Proposal) public proposals;
-    mapping(address => mapping(uint256 => bool)) public votes;
-    uint256 public proposalCount;
-
-    function createProposal(string memory description) public {
-        proposals[proposalCount] = Proposal(description, 0, false);
-        proposalCount++;
-    }
-
-    function vote(uint256 proposalId) public {
-        require(!votes[msg.sender][proposalId], "Already voted");
-        votes[msg.sender][proposalId] = true;
-        proposals[proposalId].voteCount++;
-    }
-}`,
-      "default": `pragma solidity ^0.8.0;
-
-contract GeneratedContract {
-    // Contract generated based on your prompt
-    address public owner;
-    
-    constructor() {
-        owner = msg.sender;
-    }
-    
-    modifier onlyOwner() {
-        require(msg.sender == owner, "Not owner");
-        _;
-    }
-    
-    // Add your custom logic here
-}`
-    };
-
-    const lowerMessage = userMessage.toLowerCase();
-    let code = templates["default"];
-    let response = "I've generated a smart contract based on your request. ";
-
-    if (lowerMessage.includes("erc-20") || lowerMessage.includes("token")) {
-      code = templates["erc-20"];
-      response += "This is an ERC-20 token contract with minting functionality.";
-    } else if (lowerMessage.includes("nft") || lowerMessage.includes("721")) {
-      code = templates["nft"];
-      response += "This is an ERC-721 NFT contract with minting capabilities.";
-    } else if (lowerMessage.includes("dao") || lowerMessage.includes("governance")) {
-      code = templates["dao"];
-      response += "This is a simple DAO governance contract with proposal and voting functionality.";
-    } else {
-      response += "I've created a basic contract structure. Let me know what specific features you'd like to add!";
-    }
-
-    onCodeGenerated(code);
-    return response;
   };
 
   const handleSubmit = async () => {
@@ -153,16 +124,22 @@ contract GeneratedContract {
     setIsGenerating(true);
 
     try {
-      // Simulate AI processing
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
       const response = await generateResponse(input);
       const assistantMessage: Message = { role: "assistant", content: response };
       setMessages(prev => [...prev, assistantMessage]);
       
-      toast.success("Code generated successfully!");
-    } catch (error) {
-      toast.error("Failed to generate code. Please try again.");
+      toast.success("Smart contract generated by AI!");
+    } catch (error: any) {
+      console.error('Chat error:', error);
+      const errorMessage = error.message || "Failed to generate code. Please try again.";
+      
+      if (errorMessage.includes("Rate limit")) {
+        toast.error("AI rate limit reached. Please wait a moment and try again.");
+      } else if (errorMessage.includes("credits")) {
+        toast.error("AI credits depleted. Please add credits to continue.");
+      } else {
+        toast.error(errorMessage);
+      }
     } finally {
       setIsGenerating(false);
     }
