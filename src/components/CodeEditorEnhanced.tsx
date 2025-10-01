@@ -7,9 +7,7 @@ import { BrowserProvider } from "ethers";
 import CompileOutput from "./CompileOutput";
 import DeployInterface from "./DeployInterface";
 import InteractPanel from "./InteractPanel";
-
-// @ts-ignore
-import solc from "solc";
+import { fetchAndLoadSolc } from "web-solc";
 
 interface CodeEditorEnhancedProps {
   code: string;
@@ -53,30 +51,16 @@ const CodeEditorEnhanced = ({ code, onCodeChange, provider }: CodeEditorEnhanced
     toast.success("Contract downloaded!");
   };
 
-  const findImports = (path: string): { contents?: string; error?: string } => {
-    // Handle OpenZeppelin imports by loading from CDN
-    if (path.startsWith("@openzeppelin/")) {
-      const version = "4.9.0"; // OpenZeppelin version
-      const urlPath = path.replace("@openzeppelin/contracts/", "");
-      const url = `https://cdn.jsdelivr.net/npm/@openzeppelin/contracts@${version}/${urlPath}`;
-      
-      try {
-        // In production, you'd need to fetch this asynchronously
-        // For now, return a placeholder that indicates the import is recognized
-        return { 
-          contents: `// OpenZeppelin import: ${path}\n// This would be resolved from: ${url}\n`
-        };
-      } catch (error) {
-        return { error: `Could not resolve import: ${path}` };
-      }
-    }
-    
-    return { error: `Import not found: ${path}` };
-  };
-
   const compileContract = async () => {
     setIsCompiling(true);
+    let solcInstance: any = null;
+    
     try {
+      toast.info("Loading Solidity compiler...");
+      
+      // Fetch and load the Solidity compiler for browser (returns WebSolc instance)
+      solcInstance = await fetchAndLoadSolc("0.8.26");
+      
       // Extract contract name from code
       const contractNameMatch = code.match(/contract\s+(\w+)/);
       const contractName = contractNameMatch ? contractNameMatch[1] : "Contract";
@@ -103,10 +87,10 @@ const CodeEditorEnhanced = ({ code, onCodeChange, provider }: CodeEditorEnhanced
         }
       };
 
-      // Compile
-      const output = JSON.parse(
-        solc.compile(JSON.stringify(input), { import: findImports })
-      );
+      toast.info("Compiling contract...");
+      
+      // Compile using the WebSolc instance
+      const output = await solcInstance.compile(input);
 
       // Process compilation results
       const errors: string[] = [];
@@ -159,6 +143,10 @@ const CodeEditorEnhanced = ({ code, onCodeChange, provider }: CodeEditorEnhanced
       });
       toast.error("Compilation failed");
     } finally {
+      // Clean up the web worker
+      if (solcInstance && typeof solcInstance.stopWorker === 'function') {
+        solcInstance.stopWorker();
+      }
       setIsCompiling(false);
     }
   };
