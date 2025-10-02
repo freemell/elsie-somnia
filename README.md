@@ -1,73 +1,172 @@
-# Welcome to your Lovable project
+# Elsie Somnia 
 
-## Project info
+**Elsie Somnia** is an intelligent AI-powered smart contract development platform designed specifically for the Somnia blockchain. Built with modern web technologies, it provides an intuitive chat interface for generating, editing, and deploying Solidity smart contracts with AI assistance.
 
-**URL**: https://lovable.dev/projects/3b523d61-27c6-4529-96f8-ca6b87c4ca1e
+##  Features
 
-## How can I edit this code?
+###  AI-Powered Code Generation
+- **Intelligent Chat Interface**: Describe your smart contract requirements in natural language
+- **Real-time Code Generation**: Watch as Elsie generates Solidity code in real-time
+- **Context-Aware Responses**: Maintains conversation context for iterative development
+- **Somnia-Optimized**: Specialized for Somnia blockchain's high-throughput capabilities
 
-There are several ways of editing your application.
+### Advanced Code Editor
+- **Monaco Editor Integration**: Professional code editing experience with syntax highlighting
+- **Live Compilation**: Real-time Solidity compilation with error detection
+- **Code Templates**: Pre-built contract templates for common use cases
+- **Export Options**: Download contracts as `.sol` files
 
-**Use Lovable**
+###  Blockchain Integration
+- **Wallet Connection**: Seamless integration with Web3 wallets
+- **Somnia Testnet Support**: Deploy directly to Somnia testnet
+- **Transaction Management**: Handle deployments and interactions
+- **Gas Optimization**: Built-in gas estimation and optimization
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/3b523d61-27c6-4529-96f8-ca6b87c4ca1e) and start prompting.
+### Modern UI/UX
+- **Responsive Design**: Works perfectly on desktop and mobile devices
+- **Dark/Light Themes**: Customizable interface themes
+- **Component Library**: Built with shadcn/ui for consistent design
+- **Real-time Updates**: Live collaboration and instant feedback
 
-Changes made via Lovable will be committed automatically to this repo.
+##  Technology Stack
 
-**Use your preferred IDE**
+### Frontend
+- **React 18** - Modern React with hooks and concurrent features
+- **TypeScript** - Type-safe development
+- **Vite** - Lightning-fast build tool and dev server
+- **Tailwind CSS** - Utility-first CSS framework
+- **shadcn/ui** - Beautiful, accessible component library
+- **Monaco Editor** - VS Code's editor in the browser
+- **Ethers.js** - Ethereum library for blockchain interactions
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Backend & AI
+- **Supabase** - Backend-as-a-Service for authentication and database
+- **Supabase Edge Functions** - Serverless functions for AI integration
+- **Lovable AI Gateway** - AI model integration
+- **Google Gemini 2.5 Flash** - Advanced AI model for code generation
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### Blockchain
+- **Somnia Blockchain** - High-performance EVM-compatible L1
+- **Solidity ^0.8.0** - Smart contract programming language
+- **OpenZeppelin** - Secure smart contract libraries
 
-Follow these steps:
+## Getting Started
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+### Prerequisites
+- Node.js 18+ and npm
+- Git
+- A modern web browser with Web3 wallet support (MetaMask, etc.)
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+### Installation
 
-# Step 3: Install the necessary dependencies.
-npm i
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/your-username/elsie-somnia.git
+   cd elsie-somnia
+   ```
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Set up environment variables**
+   Create a `.env.local` file in the root directory:
+   ```env
+   VITE_SUPABASE_URL=your_supabase_url
+   VITE_SUPABASE_PUBLISHABLE_KEY=your_supabase_anon_key
+   ```
+
+4. **Start the development server**
+   ```bash
+   npm run dev
+   ```
+
+5. **Open your browser**
+   Navigate to `http://localhost:5173` to see Elsie Somnia in action!
+
+##  Usage
+
+### 1. Chat with Elsie
+- Open the chat interface on the left side
+- Describe what you want to build (e.g., "Create an ERC-20 token with minting capabilities")
+- Watch as Elsie generates the complete Solidity contract
+
+### 2. Edit and Customize
+- Use the code editor on the right to modify generated code
+- Real-time syntax highlighting and error detection
+- Copy, download, or share your contracts
+
+### 3. Deploy to Somnia
+- Connect your Web3 wallet
+- Deploy directly to Somnia testnet
+- Interact with your deployed contracts
+
+## Project Structure
+
+```
+elsie-somnia/
+├── src/
+│   ├── components/          # React components
+│   │   ├── ui/             # shadcn/ui components
+│   │   ├── ChatInterface.tsx
+│   │   ├── CodeEditor.tsx
+│   │   └── ...
+│   ├── pages/              # Application pages
+│   ├── hooks/              # Custom React hooks
+│   ├── lib/                # Utility functions
+│   └── integrations/       # External service integrations
+├── supabase/
+│   └── functions/          # Edge functions for AI integration
+├── public/                 # Static assets
+└── package.json           # Dependencies and scripts
 ```
 
-**Edit a file directly in GitHub**
+## 🔧 Available Scripts
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run preview` - Preview production build
+- `npm run lint` - Run ESLint
 
-**Use GitHub Codespaces**
+## 🌐 Somnia Blockchain Features
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+Elsie Somnia is optimized for Somnia's unique capabilities:
 
-## What technologies are used for this project?
+- **High Throughput**: >1,000,000 TPS support
+- **Sub-second Finality**: ~400ms block time
+- **Ultra-low Fees**: Optimized for frequent transactions
+- **Reactive Capabilities**: Advanced event indexing
+- **EVM Compatibility**: Full Ethereum compatibility
 
-This project is built with:
+## 🤝 Contributing
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
 
-## How can I deploy this project?
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-Simply open [Lovable](https://lovable.dev/projects/3b523d61-27c6-4529-96f8-ca6b87c4ca1e) and click on Share -> Publish.
+## 📝 License
 
-## Can I connect a custom domain to my Lovable project?
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-Yes, you can!
+## 🙏 Acknowledgments
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+- [Somnia](https://somnia.network/) - The high-performance blockchain platform
+- [OpenZeppelin](https://openzeppelin.com/) - Secure smart contract libraries
+- [shadcn/ui](https://ui.shadcn.com/) - Beautiful component library
+- [Lovable](https://lovable.dev/) - AI-powered development platform
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+## 📞 Support
+
+- **Documentation**: [docs.elsie-somnia.com](https://docs.elsie-somnia.com)
+- **Discord**: [Join our Discord](https://discord.gg/elsie-somnia)
+- **Twitter**: [@ElsieSomnia](https://twitter.com/ElsieSomnia)
+- **Issues**: [GitHub Issues](https://github.com/your-username/elsie-somnia/issues)
+
+---
+
+**Built with ❤️ for the Somnia ecosystem**
