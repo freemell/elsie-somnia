@@ -68,11 +68,41 @@ const VoiceCallInterface = ({ onCodeGenerated }: VoiceCallInterfaceProps) => {
     try {
       console.log("Starting ElevenLabs voice call...");
       
+      // Preflight checks and microphone permission
+      if (!window.isSecureContext) {
+        throw new Error("Microphone requires HTTPS. Open this app over https and try again.");
+      }
+
+      // Check permission status when supported
+      try {
+        if ('permissions' in navigator && (navigator as any).permissions?.query) {
+          const perm = await (navigator as any).permissions.query({ name: 'microphone' as PermissionName });
+          if (perm.state === 'denied') {
+            throw new Error("Microphone permission is blocked. Click the camera icon in the address bar to allow the microphone, then retry.");
+          }
+        }
+      } catch (_) {
+        // Ignore permissions API issues
+      }
+
       // Request microphone access
       try {
-        await navigator.mediaDevices.getUserMedia({ audio: true });
-      } catch (permissionError) {
-        throw new Error("Microphone access denied. Please allow microphone access in your browser settings and try again.");
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        // Immediately stop tracks, we only needed to confirm access
+        stream.getTracks().forEach(t => t.stop());
+      } catch (e: any) {
+        const name = e?.name;
+        let msg = "Microphone access failed.";
+        if (name === 'NotAllowedError' || name === 'SecurityError') {
+          msg = "Microphone permission denied. Use the address bar camera icon to allow access and try again.";
+        } else if (name === 'NotFoundError' || name === 'DevicesNotFoundError') {
+          msg = "No microphone found. Connect a microphone and try again.";
+        } else if (name === 'NotReadableError') {
+          msg = "Microphone is in use by another app. Close it and retry.";
+        } else if (name === 'OverconstrainedError') {
+          msg = "Selected microphone is unavailable. Try the default input device.";
+        }
+        throw new Error(msg);
       }
       
       const AGENT_ID = "agent_6101k74nms6beb29n8yz67q71xbf";
