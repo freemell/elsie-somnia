@@ -69,7 +69,11 @@ const VoiceCallInterface = ({ onCodeGenerated }: VoiceCallInterfaceProps) => {
       console.log("Starting ElevenLabs voice call...");
       
       // Request microphone access
-      await navigator.mediaDevices.getUserMedia({ audio: true });
+      try {
+        await navigator.mediaDevices.getUserMedia({ audio: true });
+      } catch (permissionError) {
+        throw new Error("Microphone access denied. Please allow microphone access in your browser settings and try again.");
+      }
       
       const AGENT_ID = "agent_6101k74nms6beb29n8yz67q71xbf";
       
