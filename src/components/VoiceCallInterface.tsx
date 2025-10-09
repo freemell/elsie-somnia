@@ -10,11 +10,13 @@ interface VoiceCallInterfaceProps {
 
 const VoiceCallInterface = ({ onCodeGenerated }: VoiceCallInterfaceProps) => {
   const [isConnected, setIsConnected] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const chatRef = useRef<RealtimeChat | null>(null);
   const [currentTranscript, setCurrentTranscript] = useState("");
   const [transcript, setTranscript] = useState<string[]>([]);
+  const [connectionError, setConnectionError] = useState<string>("");
 
   const extractSolidityCode = (text: string): string => {
     const solidityMatch = text.match(/```solidity\n([\s\S]*?)\n```/);
@@ -70,14 +72,22 @@ const VoiceCallInterface = ({ onCodeGenerated }: VoiceCallInterfaceProps) => {
   };
 
   const start = async () => {
+    setIsConnecting(true);
+    setConnectionError("");
+    
     try {
+      console.log("Starting voice call...");
       chatRef.current = new RealtimeChat(handleMessage);
       await chatRef.current.init();
       setIsConnected(true);
+      setIsConnecting(false);
       toast.success("Connected to Elsie");
     } catch (err) {
-      console.error(err);
-      toast.error(err instanceof Error ? err.message : "Failed to start voice call");
+      console.error("Voice call connection error:", err);
+      const errorMessage = err instanceof Error ? err.message : "Failed to start voice call";
+      setConnectionError(errorMessage);
+      setIsConnecting(false);
+      toast.error(errorMessage);
     }
   };
 
@@ -95,10 +105,26 @@ const VoiceCallInterface = ({ onCodeGenerated }: VoiceCallInterfaceProps) => {
 
   if (!isConnected) {
     return (
-      <div className="flex items-center gap-2">
-        <Button onClick={start} size="icon" variant="outline" className="h-10 w-10">
-          <Mic className="h-5 w-5" />
+      <div className="flex flex-col items-center gap-2">
+        <Button 
+          onClick={start} 
+          size="icon" 
+          variant="outline" 
+          className="h-10 w-10"
+          disabled={isConnecting}
+        >
+          {isConnecting ? (
+            <div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          ) : (
+            <Mic className="h-5 w-5" />
+          )}
         </Button>
+        {isConnecting && (
+          <p className="text-xs text-muted-foreground">Connecting...</p>
+        )}
+        {connectionError && (
+          <p className="text-xs text-destructive max-w-[200px] text-center">{connectionError}</p>
+        )}
       </div>
     );
   }
