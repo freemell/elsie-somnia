@@ -27,11 +27,11 @@ const VoiceCallInterface = ({ onCodeGenerated }: VoiceCallInterfaceProps) => {
     onMessage: (message) => {
       console.log("ElevenLabs message:", message);
       
-      if (message.type === "user_transcript") {
+      if (message.source === "user") {
         setTranscript((prev) => [...prev, `You: ${message.message}`]);
       }
       
-      if (message.type === "agent_response") {
+      if (message.source === "ai") {
         setTranscript((prev) => [...prev, `Elsie: ${message.message}`]);
         const code = extractSolidityCode(message.message);
         if (code) {
@@ -42,7 +42,7 @@ const VoiceCallInterface = ({ onCodeGenerated }: VoiceCallInterfaceProps) => {
     },
     onError: (error) => {
       console.error("ElevenLabs error:", error);
-      const errorMessage = error.message || "Voice chat error";
+      const errorMessage = typeof error === 'string' ? error : "Voice chat error";
       setConnectionError(errorMessage);
       toast.error(errorMessage);
     },
@@ -90,8 +90,10 @@ const VoiceCallInterface = ({ onCodeGenerated }: VoiceCallInterfaceProps) => {
       
       console.log("Got signed URL, starting conversation...");
       
-      // Start the conversation
-      await conversation.startSession({ url: data.signedUrl });
+      // Start the conversation with the signed URL
+      await conversation.startSession({
+        signedUrl: data.signedUrl
+      });
       
     } catch (err) {
       console.error("Voice call connection error:", err);
