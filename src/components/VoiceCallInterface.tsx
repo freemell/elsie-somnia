@@ -71,13 +71,7 @@ const VoiceCallInterface = ({ onCodeGenerated }: VoiceCallInterfaceProps) => {
       // Request microphone access
       await navigator.mediaDevices.getUserMedia({ audio: true });
       
-      // Get the agent ID - you'll need to create an agent in ElevenLabs dashboard
-      // For now, using a placeholder - user needs to set this
-      const AGENT_ID = "your_agent_id_here"; // TODO: Set your ElevenLabs agent ID
-      
-      if (AGENT_ID === "your_agent_id_here") {
-        throw new Error("Please set your ElevenLabs agent ID in the code");
-      }
+      const AGENT_ID = "agent_6101k74nms6beb29n8yz67q71xbf";
       
       // Get signed URL from our edge function
       const { data, error } = await supabase.functions.invoke('elevenlabs-session', {
