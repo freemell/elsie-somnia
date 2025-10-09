@@ -28,15 +28,24 @@ serve(async (req) => {
       console.log("Client WebSocket connected");
       
       const url = "wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-10-01";
-      openaiWs = new WebSocket(url, {
-        headers: {
-          "Authorization": `Bearer ${OPENAI_API_KEY}`,
-          "OpenAI-Beta": "realtime=v1",
-        },
-      });
+      const headers = new Headers();
+      headers.set("Authorization", `Bearer ${OPENAI_API_KEY}`);
+      headers.set("OpenAI-Beta", "realtime=v1");
+      
+      openaiWs = new WebSocket(url);
 
       openaiWs.onopen = () => {
         console.log("Connected to OpenAI Realtime API");
+        // Send authorization after connection
+        if (openaiWs && openaiWs.readyState === WebSocket.OPEN) {
+          openaiWs.send(JSON.stringify({
+            type: "session.update",
+            session: {
+              modalities: ["text", "audio"],
+              instructions: "You are Elsie, an AI assistant specialized in creating Solidity smart contracts.",
+            }
+          }));
+        }
       };
 
       openaiWs.onmessage = (event) => {
