@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.realtime-voice]
 verify_jwt = false
+
+[functions.realtime-session]
+verify_jwt = false
