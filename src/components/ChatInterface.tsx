@@ -6,7 +6,7 @@ import { Send } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import elsieLogo from "@/assets/elsie-logo.png";
-import VoiceInterface from "./VoiceInterface";
+import VoiceCallInterface from "./VoiceCallInterface";
 
 interface Message {
   role: "user" | "assistant";
@@ -209,7 +209,7 @@ const ChatInterface = ({ onCodeGenerated }: ChatInterfaceProps) => {
             <img src={elsieLogo} alt="Elsie" className="h-5 w-5" />
             Chat with Elsie
           </h2>
-          <VoiceInterface onCodeGenerated={onCodeGenerated} />
+          <VoiceCallInterface onCodeGenerated={onCodeGenerated} />
         </div>
       </div>
 
@@ -263,6 +263,7 @@ const ChatInterface = ({ onCodeGenerated }: ChatInterfaceProps) => {
           >
             <Send className="h-5 w-5" />
           </Button>
+          <VoiceCallInterface onCodeGenerated={onCodeGenerated} />
         </div>
       </div>
     </div>
