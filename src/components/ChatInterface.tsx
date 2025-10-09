@@ -209,7 +209,6 @@ const ChatInterface = ({ onCodeGenerated }: ChatInterfaceProps) => {
             <img src={elsieLogo} alt="Elsie" className="h-5 w-5" />
             Chat with Elsie
           </h2>
-          <VoiceCallInterface onCodeGenerated={onCodeGenerated} />
         </div>
       </div>
 
