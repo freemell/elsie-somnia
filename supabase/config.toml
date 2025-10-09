@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.realtime-session]
 verify_jwt = false
+
+[functions.elevenlabs-session]
+verify_jwt = false

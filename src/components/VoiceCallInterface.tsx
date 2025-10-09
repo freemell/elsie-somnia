@@ -1,22 +1,55 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Mic, MicOff, Phone, PhoneOff } from "lucide-react";
+import { Mic, PhoneOff } from "lucide-react";
 import { toast } from "sonner";
-import { RealtimeChat } from "@/utils/RealtimeAudio";
+import { useConversation } from "@11labs/react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface VoiceCallInterfaceProps {
   onCodeGenerated: (code: string) => void;
 }
 
 const VoiceCallInterface = ({ onCodeGenerated }: VoiceCallInterfaceProps) => {
-  const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
-  const [isListening, setIsListening] = useState(false);
-  const [isSpeaking, setIsSpeaking] = useState(false);
-  const chatRef = useRef<RealtimeChat | null>(null);
-  const [currentTranscript, setCurrentTranscript] = useState("");
-  const [transcript, setTranscript] = useState<string[]>([]);
   const [connectionError, setConnectionError] = useState<string>("");
+  const [transcript, setTranscript] = useState<string[]>([]);
+  const [agentId, setAgentId] = useState<string>(""); // Set your ElevenLabs agent ID here
+
+  const conversation = useConversation({
+    onConnect: () => {
+      console.log("ElevenLabs: Connected");
+      toast.success("Connected to Elsie");
+      setIsConnecting(false);
+    },
+    onDisconnect: () => {
+      console.log("ElevenLabs: Disconnected");
+    },
+    onMessage: (message) => {
+      console.log("ElevenLabs message:", message);
+      
+      if (message.type === "user_transcript") {
+        setTranscript((prev) => [...prev, `You: ${message.message}`]);
+      }
+      
+      if (message.type === "agent_response") {
+        setTranscript((prev) => [...prev, `Elsie: ${message.message}`]);
+        const code = extractSolidityCode(message.message);
+        if (code) {
+          onCodeGenerated(code);
+          toast.success("Smart contract generated from voice!");
+        }
+      }
+    },
+    onError: (error) => {
+      console.error("ElevenLabs error:", error);
+      const errorMessage = error.message || "Voice chat error";
+      setConnectionError(errorMessage);
+      toast.error(errorMessage);
+    },
+  });
+
+  const { status, isSpeaking } = conversation;
+  const isConnected = status === "connected";
 
   const extractSolidityCode = (text: string): string => {
     const solidityMatch = text.match(/```solidity\n([\s\S]*?)\n```/);
@@ -27,61 +60,39 @@ const VoiceCallInterface = ({ onCodeGenerated }: VoiceCallInterfaceProps) => {
     return "";
   };
 
-  const handleMessage = (event: any) => {
-    console.log("Voice event:", event.type);
-
-    if (event.type === "response.audio.delta") {
-      setIsSpeaking(true);
-    }
-    if (event.type === "response.audio.done") {
-      setIsSpeaking(false);
-    }
-
-    if (event.type === "input_audio_buffer.speech_started") {
-      setIsListening(true);
-    }
-    if (event.type === "input_audio_buffer.speech_stopped") {
-      setIsListening(false);
-    }
-
-    if (event.type === "conversation.item.input_audio_transcription.completed") {
-      setTranscript((prev) => [...prev, `You: ${event.transcript}`]);
-    }
-
-    if (event.type === "response.audio_transcript.delta" && event.delta) {
-      setCurrentTranscript((prev) => prev + event.delta);
-    }
-    
-    if (event.type === "response.audio_transcript.done") {
-      const text = event.transcript || currentTranscript;
-      if (text) {
-        setTranscript((prev) => [...prev, `Elsie: ${text}`]);
-        const code = extractSolidityCode(text);
-        if (code) {
-          onCodeGenerated(code);
-          toast.success("Smart contract generated from voice!");
-        }
-      }
-      setCurrentTranscript("");
-    }
-
-    if (event.type === "error") {
-      console.error("Voice error:", event);
-      toast.error(event.error?.message || "Voice chat error");
-    }
-  };
 
   const start = async () => {
     setIsConnecting(true);
     setConnectionError("");
     
     try {
-      console.log("Starting voice call...");
-      chatRef.current = new RealtimeChat(handleMessage);
-      await chatRef.current.init();
-      setIsConnected(true);
-      setIsConnecting(false);
-      toast.success("Connected to Elsie");
+      console.log("Starting ElevenLabs voice call...");
+      
+      // Request microphone access
+      await navigator.mediaDevices.getUserMedia({ audio: true });
+      
+      // Get the agent ID - you'll need to create an agent in ElevenLabs dashboard
+      // For now, using a placeholder - user needs to set this
+      const AGENT_ID = "your_agent_id_here"; // TODO: Set your ElevenLabs agent ID
+      
+      if (AGENT_ID === "your_agent_id_here") {
+        throw new Error("Please set your ElevenLabs agent ID in the code");
+      }
+      
+      // Get signed URL from our edge function
+      const { data, error } = await supabase.functions.invoke('elevenlabs-session', {
+        body: { agentId: AGENT_ID }
+      });
+      
+      if (error || !data?.signedUrl) {
+        throw new Error(error?.message || "Failed to get signed URL");
+      }
+      
+      console.log("Got signed URL, starting conversation...");
+      
+      // Start the conversation
+      await conversation.startSession({ url: data.signedUrl });
+      
     } catch (err) {
       console.error("Voice call connection error:", err);
       const errorMessage = err instanceof Error ? err.message : "Failed to start voice call";
@@ -91,17 +102,17 @@ const VoiceCallInterface = ({ onCodeGenerated }: VoiceCallInterfaceProps) => {
     }
   };
 
-  const stop = () => {
-    chatRef.current?.disconnect();
-    chatRef.current = null;
-    setIsConnected(false);
-    setIsListening(false);
-    setIsSpeaking(false);
+  const stop = async () => {
+    await conversation.endSession();
     setTranscript([]);
-    setCurrentTranscript("");
+    setConnectionError("");
   };
 
-  useEffect(() => () => stop(), []);
+  useEffect(() => {
+    return () => {
+      stop();
+    };
+  }, []);
 
   if (!isConnected) {
     return (
@@ -136,7 +147,7 @@ const VoiceCallInterface = ({ onCodeGenerated }: VoiceCallInterfaceProps) => {
         <div className="text-center mb-8 animate-scale-in">
           <h2 className="text-3xl font-bold mb-2">Voice Call with Elsie</h2>
           <p className="text-muted-foreground">
-            {isSpeaking ? "Elsie is speaking..." : isListening ? "Listening..." : "Speak naturally"}
+            {isSpeaking ? "Elsie is speaking..." : "Speak naturally"}
           </p>
         </div>
 
@@ -144,10 +155,10 @@ const VoiceCallInterface = ({ onCodeGenerated }: VoiceCallInterfaceProps) => {
         <div className="relative mb-8">
           <div
             className={`w-32 h-32 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center transition-all duration-300 ${
-              isSpeaking ? "animate-pulse scale-110" : isListening ? "ring-4 ring-primary/50 scale-105" : ""
+              isSpeaking ? "animate-pulse scale-110" : ""
             }`}
           >
-            <Mic className={`h-16 w-16 text-primary-foreground ${isListening ? "animate-pulse" : ""}`} />
+            <Mic className="h-16 w-16 text-primary-foreground" />
           </div>
           {isSpeaking && (
             <div className="absolute inset-0 rounded-full bg-primary/20 animate-ping" />
@@ -164,9 +175,6 @@ const VoiceCallInterface = ({ onCodeGenerated }: VoiceCallInterfaceProps) => {
                 {line}
               </p>
             ))
-          )}
-          {currentTranscript && (
-            <p className="text-sm text-primary animate-pulse">Elsie: {currentTranscript}...</p>
           )}
         </div>
 
