@@ -6,6 +6,7 @@ import { Send } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import elsieLogo from "@/assets/elsie-logo.png";
+import VoiceInterface from "./VoiceInterface";
 
 interface Message {
   role: "user" | "assistant";
@@ -203,10 +204,13 @@ const ChatInterface = ({ onCodeGenerated }: ChatInterfaceProps) => {
   return (
     <div className="flex flex-col h-[calc(100vh-12rem)] bg-card border border-border rounded-lg overflow-hidden">
       <div className="p-4 border-b border-border bg-muted/50">
-        <h2 className="text-lg font-semibold flex items-center gap-2">
-          <img src={elsieLogo} alt="Elsie" className="h-5 w-5" />
-          Chat with Elsie
-        </h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold flex items-center gap-2">
+            <img src={elsieLogo} alt="Elsie" className="h-5 w-5" />
+            Chat with Elsie
+          </h2>
+          <VoiceInterface onCodeGenerated={onCodeGenerated} />
+        </div>
       </div>
 
       <ScrollArea className="flex-1 p-4" ref={scrollRef}>
