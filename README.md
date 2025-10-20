@@ -59,7 +59,7 @@ It provides a natural-language chat interface, real-time Solidity generation, an
 
 ### ⚙️ Backend & AI
 `Supabase` • `Supabase Edge Functions`  
-`Lovable AI Gateway` • `Google Gemini 2.5 Flash`
+
 
 ### ⛓️ Blockchain
 `Somnia L1` (EVM-compatible) • `Solidity ^0.8.0`  
